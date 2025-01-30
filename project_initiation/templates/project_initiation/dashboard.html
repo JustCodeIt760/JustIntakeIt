@@ -1,0 +1,152 @@
+{% extends 'project_initiation/base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-9">
+        <h2>Project Dashboard</h2>
+    </div>
+    <div class="col-md-3 text-end">
+        <a href="{% url 'project_initiation:project_wizard' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> New Project
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Total Projects</h5>
+                <p class="card-text display-4">{{ projects_count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Stakeholders</h5>
+                <p class="card-text display-4">{{ stakeholders_count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">Total Risks</h5>
+                <p class="card-text display-4">{{ risks_count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <h5 class="card-title">High Risks</h5>
+                <p class="card-text display-4">{{ high_risks }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Recent Projects</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_projects %}
+                    <div class="list-group">
+                        {% for project in recent_projects %}
+                            <a href="{% url 'admin:project_initiation_project_change' project.id %}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ project.name }}</h6>
+                                    <small>{{ project.created_at|date }}</small>
+                                </div>
+                                <p class="mb-1">{{ project.description|truncatewords:20 }}</p>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No projects found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Upcoming Milestones</h5>
+            </div>
+            <div class="card-body">
+                {% if pending_milestones %}
+                    <div class="list-group">
+                        {% for milestone in pending_milestones %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ milestone.name }}</h6>
+                                    <small class="text-{% if milestone.target_date|date:'Y-m-d' < now|date:'Y-m-d' %}danger{% else %}success{% endif %}">
+                                        {{ milestone.target_date|date }}
+                                    </small>
+                                </div>
+                                <p class="mb-1">{{ milestone.description|truncatewords:20 }}</p>
+                                <small>Project: {{ milestone.project.name }}</small>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No pending milestones.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Recent Feasibility Studies</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_feasibility_studies %}
+                    <div class="list-group">
+                        {% for study in recent_feasibility_studies %}
+                            <a href="{% url 'admin:project_initiation_feasibilitystudy_change' study.id %}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ study.project.name }}</h6>
+                                    <small>{{ study.created_at|date }}</small>
+                                </div>
+                                <p class="mb-1">{{ study.conclusion|truncatewords:20 }}</p>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No feasibility studies found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Pending Project Charters</h5>
+            </div>
+            <div class="card-body">
+                {% if pending_charters > 0 %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        There are {{ pending_charters }} project charters pending approval.
+                        <a href="{% url 'admin:project_initiation_projectcharter_changelist' %}" class="alert-link">Review now</a>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No pending project charters.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

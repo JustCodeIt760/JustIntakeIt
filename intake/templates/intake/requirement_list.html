@@ -1,0 +1,111 @@
+{% extends 'intake/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Requirements</h2>
+    <a href="{% url 'intake:requirement_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add Requirement
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#priority" data-bs-toggle="tab">By Priority</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#category" data-bs-toggle="tab">By Category</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#status" data-bs-toggle="tab">By Status</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content">
+                    <!-- Priority View -->
+                    <div class="tab-pane fade show active" id="priority">
+                        {% regroup requirements by get_priority_display as priority_list %}
+                        {% for priority in priority_list %}
+                            <div class="mb-4">
+                                <h5 class="mb-3">{{ priority.grouper }}</h5>
+                                <div class="list-group">
+                                    {% for requirement in priority.list %}
+                                        <a href="{% url 'intake:requirement_detail' requirement.pk %}"
+                                           class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">{{ requirement.title }}</h6>
+                                                <small class="text-muted">{{ requirement.created_at|date }}</small>
+                                            </div>
+                                            <p class="mb-1">{{ requirement.description|truncatewords:30 }}</p>
+                                            <small class="text-muted">
+                                                Category: {{ requirement.category.name }} |
+                                                Status: {{ requirement.get_status_display }}
+                                            </small>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Category View -->
+                    <div class="tab-pane fade" id="category">
+                        {% regroup requirements by category as category_list %}
+                        {% for category in category_list %}
+                            <div class="mb-4">
+                                <h5 class="mb-3">{{ category.grouper.name }}</h5>
+                                <div class="list-group">
+                                    {% for requirement in category.list %}
+                                        <a href="{% url 'intake:requirement_detail' requirement.pk %}"
+                                           class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">{{ requirement.title }}</h6>
+                                                <small class="text-muted">{{ requirement.created_at|date }}</small>
+                                            </div>
+                                            <p class="mb-1">{{ requirement.description|truncatewords:30 }}</p>
+                                            <small class="text-muted">
+                                                Priority: {{ requirement.get_priority_display }} |
+                                                Status: {{ requirement.get_status_display }}
+                                            </small>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Status View -->
+                    <div class="tab-pane fade" id="status">
+                        {% regroup requirements by get_status_display as status_list %}
+                        {% for status in status_list %}
+                            <div class="mb-4">
+                                <h5 class="mb-3">{{ status.grouper }}</h5>
+                                <div class="list-group">
+                                    {% for requirement in status.list %}
+                                        <a href="{% url 'intake:requirement_detail' requirement.pk %}"
+                                           class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">{{ requirement.title }}</h6>
+                                                <small class="text-muted">{{ requirement.created_at|date }}</small>
+                                            </div>
+                                            <p class="mb-1">{{ requirement.description|truncatewords:30 }}</p>
+                                            <small class="text-muted">
+                                                Category: {{ requirement.category.name }} |
+                                                Priority: {{ requirement.get_priority_display }}
+                                            </small>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

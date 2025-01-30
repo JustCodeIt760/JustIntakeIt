@@ -1,0 +1,89 @@
+{% extends 'intake/base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Stakeholders</h5>
+                <p class="card-text display-4">{{ stakeholders_count }}</p>
+                <a href="{% url 'intake:stakeholder_list' %}" class="btn btn-light">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Requirements</h5>
+                <p class="card-text display-4">{{ requirements_count }}</p>
+                <a href="{% url 'intake:requirement_list' %}" class="btn btn-light">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">Categories</h5>
+                <p class="card-text display-4">{{ categories_count }}</p>
+                <a href="{% url 'admin:intake_requirementcategory_changelist' %}" class="btn btn-light">Manage</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Requirements</h5>
+                <a href="{% url 'intake:requirement_create' %}" class="btn btn-primary btn-sm">Add New</a>
+            </div>
+            <div class="card-body">
+                {% if recent_requirements %}
+                    <div class="list-group">
+                        {% for requirement in recent_requirements %}
+                            <a href="{% url 'intake:requirement_detail' requirement.pk %}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ requirement.title }}</h6>
+                                    <small>{{ requirement.created_at|date }}</small>
+                                </div>
+                                <p class="mb-1">{{ requirement.description|truncatewords:20 }}</p>
+                                <small>Priority: {{ requirement.get_priority_display }}</small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No requirements added yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Stakeholders</h5>
+                <a href="{% url 'intake:stakeholder_create' %}" class="btn btn-primary btn-sm">Add New</a>
+            </div>
+            <div class="card-body">
+                {% if recent_stakeholders %}
+                    <div class="list-group">
+                        {% for stakeholder in recent_stakeholders %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ stakeholder.name }}</h6>
+                                    <small>{{ stakeholder.created_at|date }}</small>
+                                </div>
+                                <p class="mb-1">{{ stakeholder.organization }}</p>
+                                <small>Type: {{ stakeholder.get_stakeholder_type_display }}</small>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No stakeholders added yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

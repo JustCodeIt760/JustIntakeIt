@@ -1,0 +1,94 @@
+{% extends 'intake/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Stakeholders</h2>
+    <a href="{% url 'intake:stakeholder_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add Stakeholder
+    </a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Stakeholder Matrix</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Interest →<br>Influence ↓</th>
+                                {% for i in "12345" %}
+                                    <th class="text-center">{{ i }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for influence in "54321" %}
+                                <tr>
+                                    <th class="text-center">{{ influence }}</th>
+                                    {% for interest in "12345" %}
+                                        <td class="p-2">
+                                            {% for stakeholder in stakeholders %}
+                                                {% if stakeholder.influence_level == influence|add:"0" and stakeholder.interest_level == interest|add:"0" %}
+                                                    <div class="badge bg-primary mb-1 d-block text-wrap">
+                                                        {{ stakeholder.name }}
+                                                    </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Stakeholder List</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Organization</th>
+                                <th>Type</th>
+                                <th>Email</th>
+                                <th>Influence</th>
+                                <th>Interest</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stakeholder in stakeholders %}
+                                <tr>
+                                    <td>{{ stakeholder.name }}</td>
+                                    <td>{{ stakeholder.organization }}</td>
+                                    <td>{{ stakeholder.get_stakeholder_type_display }}</td>
+                                    <td>{{ stakeholder.email }}</td>
+                                    <td>{{ stakeholder.influence_level }}/5</td>
+                                    <td>{{ stakeholder.interest_level }}/5</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No stakeholders added yet.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
