@@ -80,8 +80,8 @@ DATABASES = {
         'NAME': 'shuttle_system_db',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
-        'HOST': 'localhost',
-        'PORT': '5433',
+        'HOST': 'db',
+        'PORT': '5432',
     }
 }
 
