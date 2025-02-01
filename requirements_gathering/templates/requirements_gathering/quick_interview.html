@@ -1,0 +1,154 @@
+{% extends "project_initiation/base.html" %}
+
+{% block content %}
+<div class="interview-container">
+    <form method="post" id="quickInterviewForm" class="interview-form">
+        {% csrf_token %}
+
+        <!-- Quick Contact Info -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="respondent_name" name="respondent_name" placeholder="Client Name">
+                    <label for="respondent_name">Client Name</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="email" class="form-control" id="respondent_email" name="respondent_email" placeholder="name@example.com">
+                    <label for="respondent_email">Email</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Voice Notes Option -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <button type="button" class="btn btn-outline-primary w-100 mb-2" id="startVoiceBtn">
+                    <i class="fas fa-microphone"></i> Start Voice Notes
+                </button>
+                <div id="voiceNotes" class="d-none">
+                    <div class="alert alert-info">Recording... Click to stop</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Notes -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="form-floating mb-3">
+                    <textarea class="form-control" id="pain_points" name="pain_points" style="height: 100px" placeholder="Pain Points"></textarea>
+                    <label for="pain_points">Quick Pain Points (tap to type)</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <textarea class="form-control" id="desired_features" name="desired_features" style="height: 100px" placeholder="Desired Features"></textarea>
+                    <label for="desired_features">Desired Features (tap to type)</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <select class="form-select" id="frequency_of_use" name="frequency_of_use">
+                        <option value="">Select frequency...</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="rarely">Rarely</option>
+                    </select>
+                    <label for="frequency_of_use">Usage Frequency</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="btn-group w-100" role="group">
+            <button type="submit" name="action" value="save_draft" class="btn btn-secondary">
+                <i class="fas fa-save"></i> Save Draft
+            </button>
+            <button type="submit" name="action" value="complete" class="btn btn-primary">
+                <i class="fas fa-check"></i> Complete
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .interview-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 15px;
+    }
+    .interview-form textarea {
+        font-size: 16px; /* Prevents zoom on mobile */
+    }
+    .btn-group {
+        gap: 10px;
+    }
+    .btn-group .btn {
+        border-radius: 20px;
+    }
+    @media (max-width: 768px) {
+        .card {
+            border-radius: 15px;
+        }
+        .form-floating > label {
+            font-size: 14px;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-save functionality
+    let typingTimer;
+    const doneTypingInterval = 1000;
+
+    const autoSave = () => {
+        const formData = new FormData(document.getElementById('quickInterviewForm'));
+        formData.append('action', 'auto_save');
+
+        fetch('{% url "requirements_gathering:save_interview" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+    };
+
+    document.querySelectorAll('textarea, input').forEach(element => {
+        element.addEventListener('keyup', () => {
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(autoSave, doneTypingInterval);
+        });
+    });
+
+    // Voice notes functionality (if browser supports it)
+    if ('webkitSpeechRecognition' in window) {
+        const recognition = new webkitSpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        const startVoiceBtn = document.getElementById('startVoiceBtn');
+        const voiceNotes = document.getElementById('voiceNotes');
+        let isRecording = false;
+
+        startVoiceBtn.addEventListener('click', () => {
+            if (!isRecording) {
+                recognition.start();
+                voiceNotes.classList.remove('d-none');
+                startVoiceBtn.innerHTML = '<i class="fas fa-stop"></i> Stop Recording';
+                isRecording = true;
+            } else {
+                recognition.stop();
+                voiceNotes.classList.add('d-none');
+                startVoiceBtn.innerHTML = '<i class="fas fa-microphone"></i> Start Voice Notes';
+                isRecording = false;
+            }
+        });
+
+        recognition.onresult = (event) => {
+            const painPoints = document.getElementById('pain_points');
+            painPoints.value += event.results[event.results.length - 1][0].transcript + ' ';
+        };
+    } else {
+        document.getElementById('startVoiceBtn').style.display = 'none';
+    }
+});
+</script>
+{% endblock %}

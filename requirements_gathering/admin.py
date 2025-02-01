@@ -9,15 +9,18 @@ from .models import (
 
 @admin.register(CustomerSurvey)
 class CustomerSurveyAdmin(admin.ModelAdmin):
-    list_display = ('title', 'status', 'created_date', 'created_by')
+    list_display = ('title', 'created_by', 'status', 'created_date', 'modified_date')
     list_filter = ('status', 'created_date')
     search_fields = ('title', 'description')
+    date_hierarchy = 'created_date'
 
 @admin.register(CustomerResponse)
 class CustomerResponseAdmin(admin.ModelAdmin):
-    list_display = ('respondent_name', 'survey', 'submission_date')
-    list_filter = ('submission_date', 'survey')
-    search_fields = ('respondent_name', 'respondent_email', 'pain_points')
+    list_display = ('respondent_name', 'respondent_email', 'survey', 'frequency_of_use', 'submission_date')
+    list_filter = ('frequency_of_use', 'submission_date')
+    search_fields = ('respondent_name', 'respondent_email', 'pain_points', 'desired_features')
+    date_hierarchy = 'submission_date'
+    raw_id_fields = ('survey',)
 
 @admin.register(OperationalRequirement)
 class OperationalRequirementAdmin(admin.ModelAdmin):

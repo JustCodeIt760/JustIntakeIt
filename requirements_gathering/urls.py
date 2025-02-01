@@ -9,4 +9,8 @@ urlpatterns = [
     path('operational/', views.operational_requirements_list, name='operational_requirements'),
     path('regulatory/', views.regulatory_compliance_list, name='regulatory_compliance'),
     path('documents/', views.document_list, name='documents'),
+    path('interview/', views.quick_interview, name='quick_interview'),
+    path('interview/save/', views.save_interview, name='save_interview'),
+    path('interview/success/', views.interview_success, name='interview_success'),
+    path('interviews/', views.interview_list, name='interview_list'),
 ]

@@ -6,6 +6,34 @@
     <title>Project Initiation - {% block title %}{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .wizard-btn {
+            background-color: #ffd700;
+            color: #000;
+            border-radius: 20px;
+            padding: 8px 20px;
+            margin-right: 15px;
+            transition: all 0.3s ease;
+        }
+        .wizard-btn:hover {
+            background-color: #ffed4a;
+            color: #000;
+            transform: scale(1.05);
+        }
+        .interview-btn {
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 20px;
+            padding: 8px 20px;
+            margin-right: 15px;
+            transition: all 0.3s ease;
+        }
+        .interview-btn:hover {
+            background-color: #45a049;
+            color: white;
+            transform: scale(1.05);
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
@@ -31,6 +59,16 @@
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link interview-btn" href="{% url 'requirements_gathering:quick_interview' %}">
+                                <i class="fas fa-comments"></i> Quick Interview
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link wizard-btn" href="{% url 'project_initiation:master_wizard' %}">
+                                <i class="fas fa-wand-magic-sparkles"></i> Wizard
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'admin:index' %}">Admin</a>
                         </li>
