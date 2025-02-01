@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.contrib import messages
 from django.forms import formset_factory
+from django.db.utils import ProgrammingError
 from .models import (
     Project, StakeholderAnalysis, BusinessCase, ProjectCharter,
     ProjectRole, FeasibilityStudy, Risk, ProjectMilestone,
@@ -13,24 +14,64 @@ from .forms import (
     StakeholderAnalysisForm, RiskForm, ProjectMilestoneForm,
     SWOTAnalysisForm, KickoffMeetingForm
 )
+from requirements_gathering.models import CustomerSurvey, OperationalRequirement
+from system_design.models import (
+    AWSComponent,
+    APIEndpoint,
+    UIComponent,
+    SystemIntegration
+)
 
 # Create your views here.
 
 @login_required
 def dashboard(request):
-    context = {
-        'projects_count': Project.objects.count(),
-        'recent_projects': Project.objects.order_by('-created_at')[:5],
-        'stakeholders_count': StakeholderAnalysis.objects.count(),
-        'risks_count': Risk.objects.count(),
-        'high_risks': Risk.objects.filter(likelihood='HIGH', impact='HIGH').count(),
-        'pending_milestones': ProjectMilestone.objects.filter(
-            project__in=Project.objects.all()
-        ).order_by('target_date')[:5],
-        'pending_charters': ProjectCharter.objects.filter(approved=False).count(),
-        'recent_feasibility_studies': FeasibilityStudy.objects.order_by('-created_at')[:5],
-        'now': timezone.now(),
-    }
+    try:
+        context = {
+            'projects_count': Project.objects.count(),
+            'recent_projects': Project.objects.order_by('-created_at')[:5],
+            'stakeholders_count': StakeholderAnalysis.objects.count(),
+            'risks_count': Risk.objects.count(),
+            'high_risks': Risk.objects.filter(likelihood='HIGH', impact='HIGH').count(),
+            'pending_milestones': ProjectMilestone.objects.filter(
+                project__in=Project.objects.all()
+            ).order_by('target_date')[:5],
+            'pending_charters': ProjectCharter.objects.filter(approved=False).count(),
+            'recent_feasibility_studies': FeasibilityStudy.objects.order_by('-created_at')[:5],
+            'now': timezone.now(),
+        }
+
+        # Try to get requirements gathering data
+        try:
+            context.update({
+                'customer_surveys': CustomerSurvey.objects.all().order_by('-created_date')[:5],
+                'operational_requirements': OperationalRequirement.objects.all().order_by('-created_date')[:5],
+            })
+        except ProgrammingError:
+            context.update({
+                'customer_surveys': [],
+                'operational_requirements': [],
+            })
+
+        # Try to get system design data
+        try:
+            context.update({
+                'aws_components': AWSComponent.objects.all().order_by('-created_date')[:5],
+                'api_endpoints': APIEndpoint.objects.all().order_by('-created_date')[:5],
+                'ui_components': UIComponent.objects.all().order_by('-created_date')[:5],
+                'integrations': SystemIntegration.objects.all().order_by('-created_date')[:5],
+            })
+        except ProgrammingError:
+            context.update({
+                'aws_components': [],
+                'api_endpoints': [],
+                'ui_components': [],
+                'integrations': [],
+            })
+
+    except ProgrammingError:
+        context = {'error': 'Database tables not yet created. Please run migrations.'}
+
     return render(request, 'project_initiation/dashboard.html', context)
 
 @login_required

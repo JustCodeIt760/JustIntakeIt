@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8">Requirements Gathering Dashboard</h1>
+
+    <!-- Customer Surveys Section -->
+    <div class="mb-8">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-semibold">Customer Surveys</h2>
+            <a href="{% url 'requirements_gathering:survey_list' %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">View All</a>
+        </div>
+        <div class="bg-white shadow rounded-lg p-6">
+            {% if customer_surveys %}
+                <div class="grid gap-4">
+                    {% for survey in customer_surveys %}
+                        <div class="border-b pb-4">
+                            <h3 class="font-semibold">{{ survey.title }}</h3>
+                            <p class="text-gray-600">Status: {{ survey.get_status_display }}</p>
+                            <p class="text-sm text-gray-500">Created: {{ survey.created_date|date }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500">No surveys available.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Operational Requirements Section -->
+    <div class="mb-8">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-semibold">Operational Requirements</h2>
+            <a href="{% url 'requirements_gathering:operational_requirements' %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">View All</a>
+        </div>
+        <div class="bg-white shadow rounded-lg p-6">
+            {% if operational_requirements %}
+                <div class="grid gap-4">
+                    {% for req in operational_requirements %}
+                        <div class="border-b pb-4">
+                            <h3 class="font-semibold">{{ req.title }}</h3>
+                            <p class="text-gray-600">Priority: {{ req.get_priority_display }}</p>
+                            <p class="text-sm text-gray-500">Department: {{ req.department }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500">No operational requirements available.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Regulatory Compliance Section -->
+    <div class="mb-8">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-semibold">Regulatory Compliance</h2>
+            <a href="{% url 'requirements_gathering:regulatory_compliance' %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">View All</a>
+        </div>
+        <div class="bg-white shadow rounded-lg p-6">
+            {% if regulatory_compliances %}
+                <div class="grid gap-4">
+                    {% for compliance in regulatory_compliances %}
+                        <div class="border-b pb-4">
+                            <h3 class="font-semibold">{{ compliance.regulation_name }}</h3>
+                            <p class="text-gray-600">Status: {{ compliance.get_compliance_status_display }}</p>
+                            <p class="text-sm text-gray-500">Next Review: {{ compliance.next_review_date|date }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500">No compliance records available.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Documents Section -->
+    <div class="mb-8">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-semibold">Recent Documents</h2>
+            <a href="{% url 'requirements_gathering:documents' %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">View All</a>
+        </div>
+        <div class="bg-white shadow rounded-lg p-6">
+            {% if recent_documents %}
+                <div class="grid gap-4">
+                    {% for doc in recent_documents %}
+                        <div class="border-b pb-4">
+                            <h3 class="font-semibold">{{ doc.title }}</h3>
+                            <p class="text-gray-600">Type: {{ doc.get_document_type_display }}</p>
+                            <p class="text-sm text-gray-500">Uploaded: {{ doc.uploaded_date|date }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500">No documents available.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

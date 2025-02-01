@@ -1,0 +1,159 @@
+{% extends "development/base.html" %}
+
+{% block development_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Development Setup Wizard</h1>
+</div>
+
+{% if error %}
+<div class="alert alert-warning" role="alert">
+    {{ error }}
+</div>
+{% else %}
+<div class="row">
+    <div class="col-md-3">
+        <!-- Navigation Pills -->
+        <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+            <a class="nav-link active" id="v-pills-sprint-tab" data-toggle="pill" href="#v-pills-sprint" role="tab">
+                <i class="fas fa-running"></i> Sprint Setup
+            </a>
+            <a class="nav-link" id="v-pills-story-tab" data-toggle="pill" href="#v-pills-story" role="tab">
+                <i class="fas fa-book"></i> User Stories
+            </a>
+            <a class="nav-link" id="v-pills-repository-tab" data-toggle="pill" href="#v-pills-repository" role="tab">
+                <i class="fas fa-code-branch"></i> Repository
+            </a>
+            <a class="nav-link" id="v-pills-pipeline-tab" data-toggle="pill" href="#v-pills-pipeline" role="tab">
+                <i class="fas fa-stream"></i> Pipeline
+            </a>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <!-- Tab Content -->
+        <div class="tab-content" id="v-pills-tabContent">
+            <!-- Sprint Setup -->
+            <div class="tab-pane fade show active" id="v-pills-sprint" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Create New Sprint</h5>
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="step" value="sprint">
+                            <div class="form-group">
+                                <label for="sprintName">Sprint Name</label>
+                                <input type="text" class="form-control" id="sprintName" name="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="sprintDescription">Description</label>
+                                <textarea class="form-control" id="sprintDescription" name="description" rows="3"></textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="startDate">Start Date</label>
+                                    <input type="date" class="form-control" id="startDate" name="start_date" required>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="endDate">End Date</label>
+                                    <input type="date" class="form-control" id="endDate" name="end_date" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Create Sprint</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Stories -->
+            <div class="tab-pane fade" id="v-pills-story" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Create User Story</h5>
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="step" value="story">
+                            <div class="form-group">
+                                <label for="storyTitle">Title</label>
+                                <input type="text" class="form-control" id="storyTitle" name="title" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="storyDescription">Description</label>
+                                <textarea class="form-control" id="storyDescription" name="description" rows="3" required></textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="sprint">Sprint</label>
+                                    <select class="form-control" id="sprint" name="sprint">
+                                        <option value="">Select Sprint</option>
+                                        {% for sprint in sprints %}
+                                        <option value="{{ sprint.id }}">{{ sprint.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="storyPoints">Story Points</label>
+                                    <input type="number" class="form-control" id="storyPoints" name="story_points" min="0" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Create Story</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Repository Setup -->
+            <div class="tab-pane fade" id="v-pills-repository" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Add Repository</h5>
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="step" value="repository">
+                            <div class="form-group">
+                                <label for="repoName">Repository Name</label>
+                                <input type="text" class="form-control" id="repoName" name="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="repoUrl">Repository URL</label>
+                                <input type="url" class="form-control" id="repoUrl" name="url" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="repoDescription">Description</label>
+                                <textarea class="form-control" id="repoDescription" name="description" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Add Repository</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pipeline Setup -->
+            <div class="tab-pane fade" id="v-pills-pipeline" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Configure Pipeline</h5>
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="step" value="pipeline">
+                            <div class="form-group">
+                                <label for="pipelineName">Pipeline Name</label>
+                                <input type="text" class="form-control" id="pipelineName" name="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="repository">Repository</label>
+                                <select class="form-control" id="repository" name="repository" required>
+                                    <option value="">Select Repository</option>
+                                    {% for repo in repositories %}
+                                    <option value="{{ repo.id }}">{{ repo.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Create Pipeline</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8">System Design Dashboard</h1>
+
+    <!-- AWS Components Section -->
+    <div class="mb-8">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-semibold">AWS Components</h2>
+            <a href="{% url 'system_design:aws_components' %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">View All</a>
+        </div>
+        <div class="bg-white shadow rounded-lg p-6">
+            {% if aws_components %}
+                <div class="grid gap-4">
+                    {% for component in aws_components %}
+                        <div class="border-b pb-4">
+                            <h3 class="font-semibold">{{ component.name }}</h3>
+                            <p class="text-gray-600">Type: {{ component.get_component_type_display }}</p>
+                            <p class="text-sm text-gray-500">Status: {{ component.status }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500">No AWS components defined.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- API Endpoints Section -->
+    <div class="mb-8">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-semibold">API Endpoints</h2>
+            <a href="{% url 'system_design:api_endpoints' %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">View All</a>
+        </div>
+        <div class="bg-white shadow rounded-lg p-6">
+            {% if api_endpoints %}
+                <div class="grid gap-4">
+                    {% for endpoint in api_endpoints %}
+                        <div class="border-b pb-4">
+                            <h3 class="font-semibold">{{ endpoint.method }} {{ endpoint.path }}</h3>
+                            <p class="text-gray-600">Component: {{ endpoint.aws_component.name }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500">No API endpoints defined.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- UI Components Section -->
+    <div class="mb-8">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-semibold">UI Components</h2>
+            <a href="{% url 'system_design:ui_components' %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">View All</a>
+        </div>
+        <div class="bg-white shadow rounded-lg p-6">
+            {% if ui_components %}
+                <div class="grid gap-4">
+                    {% for component in ui_components %}
+                        <div class="border-b pb-4">
+                            <h3 class="font-semibold">{{ component.name }}</h3>
+                            <p class="text-gray-600">Type: {{ component.get_component_type_display }}</p>
+                            <p class="text-sm text-gray-500">Status: {{ component.status }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500">No UI components defined.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- System Integrations Section -->
+    <div class="mb-8">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-semibold">System Integrations</h2>
+            <a href="{% url 'system_design:integrations' %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">View All</a>
+        </div>
+        <div class="bg-white shadow rounded-lg p-6">
+            {% if integrations %}
+                <div class="grid gap-4">
+                    {% for integration in integrations %}
+                        <div class="border-b pb-4">
+                            <h3 class="font-semibold">{{ integration.name }}</h3>
+                            <p class="text-gray-600">Type: {{ integration.get_integration_type_display }}</p>
+                            <p class="text-sm text-gray-500">Provider: {{ integration.provider }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500">No system integrations defined.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Architecture Diagrams Section -->
+    <div class="mb-8">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-semibold">Architecture Diagrams</h2>
+            <a href="{% url 'system_design:diagrams' %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">View All</a>
+        </div>
+        <div class="bg-white shadow rounded-lg p-6">
+            {% if diagrams %}
+                <div class="grid gap-4">
+                    {% for diagram in diagrams %}
+                        <div class="border-b pb-4">
+                            <h3 class="font-semibold">{{ diagram.title }}</h3>
+                            <p class="text-gray-600">Type: {{ diagram.get_diagram_type_display }}</p>
+                            <p class="text-sm text-gray-500">Version: {{ diagram.version }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500">No architecture diagrams available.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

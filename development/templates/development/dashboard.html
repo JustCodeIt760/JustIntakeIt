@@ -1,0 +1,142 @@
+{% extends "development/base.html" %}
+
+{% block development_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Development Dashboard</h1>
+</div>
+
+{% if error %}
+<div class="alert alert-warning" role="alert">
+    {{ error }}
+</div>
+{% else %}
+<!-- Summary Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Story Points</h5>
+                <p class="card-text display-4">{{ total_story_points }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Total Stories</h5>
+                <p class="card-text display-4">{{ total_stories }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Completed Stories</h5>
+                <p class="card-text display-4">{{ completed_stories_count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Active Pipelines</h5>
+                <p class="card-text display-4">{{ active_pipelines }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sprint Information -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h3>Sprint Status</h3>
+        {% if active_sprint %}
+        <div class="card mb-3">
+            <div class="card-header">
+                Active Sprint: {{ active_sprint.name }}
+            </div>
+            <div class="card-body">
+                <p>{{ active_sprint.description }}</p>
+                <p>Start Date: {{ active_sprint.start_date }} | End Date: {{ active_sprint.end_date }}</p>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">No active sprint</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- User Stories -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <h4>Backlog</h4>
+        {% for story in backlog_stories %}
+        <div class="card mb-2">
+            <div class="card-body">
+                <h6 class="card-title">{{ story.title }}</h6>
+                <p class="card-text">Points: {{ story.story_points }}</p>
+            </div>
+        </div>
+        {% empty %}
+        <p>No stories in backlog</p>
+        {% endfor %}
+    </div>
+    <div class="col-md-4">
+        <h4>In Progress</h4>
+        {% for story in in_progress_stories %}
+        <div class="card mb-2">
+            <div class="card-body">
+                <h6 class="card-title">{{ story.title }}</h6>
+                <p class="card-text">Points: {{ story.story_points }}</p>
+            </div>
+        </div>
+        {% empty %}
+        <p>No stories in progress</p>
+        {% endfor %}
+    </div>
+    <div class="col-md-4">
+        <h4>Completed</h4>
+        {% for story in completed_stories %}
+        <div class="card mb-2">
+            <div class="card-body">
+                <h6 class="card-title">{{ story.title }}</h6>
+                <p class="card-text">Points: {{ story.story_points }}</p>
+            </div>
+        </div>
+        {% empty %}
+        <p>No completed stories</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Git & CI/CD Information -->
+<div class="row">
+    <div class="col-md-6">
+        <h3>Git Activity</h3>
+        <div class="list-group">
+            {% for branch in active_branches %}
+            <div class="list-group-item">
+                <h6 class="mb-1">{{ branch.name }}</h6>
+                <small>Repository: {{ branch.repository.name }}</small>
+            </div>
+            {% empty %}
+            <div class="list-group-item">No active branches</div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="col-md-6">
+        <h3>Pipeline Runs</h3>
+        <div class="list-group">
+            {% for run in recent_pipeline_runs %}
+            <div class="list-group-item">
+                <h6 class="mb-1">{{ run.pipeline.name }}</h6>
+                <small>Status: {{ run.status }} | Started: {{ run.started_at }}</small>
+            </div>
+            {% empty %}
+            <div class="list-group-item">No recent pipeline runs</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

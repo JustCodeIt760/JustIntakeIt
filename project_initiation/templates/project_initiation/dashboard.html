@@ -3,150 +3,134 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-9">
-        <h2>Project Dashboard</h2>
-    </div>
-    <div class="col-md-3 text-end">
-        <a href="{% url 'project_initiation:project_wizard' %}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> New Project
-        </a>
-    </div>
-</div>
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8">Project Dashboard</h1>
 
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-white bg-primary">
-            <div class="card-body">
-                <h5 class="card-title">Total Projects</h5>
-                <p class="card-text display-4">{{ projects_count }}</p>
-            </div>
+    {% if error %}
+        <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-8" role="alert">
+            <p>{{ error }}</p>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-success">
-            <div class="card-body">
-                <h5 class="card-title">Stakeholders</h5>
-                <p class="card-text display-4">{{ stakeholders_count }}</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-warning">
-            <div class="card-body">
-                <h5 class="card-title">Total Risks</h5>
-                <p class="card-text display-4">{{ risks_count }}</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-danger">
-            <div class="card-body">
-                <h5 class="card-title">High Risks</h5>
-                <p class="card-text display-4">{{ high_risks }}</p>
-            </div>
-        </div>
-    </div>
-</div>
+    {% endif %}
 
-<div class="row">
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Recent Projects</h5>
+    <!-- Project Phases -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Project Initiation Phase -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Project Initiation</h2>
+            <ul class="space-y-2">
+                <li><a href="#" class="text-blue-500 hover:text-blue-600">Project Charter</a></li>
+                <li><a href="#" class="text-blue-500 hover:text-blue-600">Stakeholder Analysis</a></li>
+                <li><a href="#" class="text-blue-500 hover:text-blue-600">Initial Scope Statement</a></li>
+            </ul>
+        </div>
+
+        <!-- Requirements Gathering Phase -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Requirements Gathering</h2>
+            <ul class="space-y-2">
+                <li><a href="{% url 'requirements_gathering:survey_list' %}" class="text-blue-500 hover:text-blue-600">Customer Surveys</a></li>
+                <li><a href="{% url 'requirements_gathering:operational_requirements' %}" class="text-blue-500 hover:text-blue-600">Operational Requirements</a></li>
+                <li><a href="{% url 'requirements_gathering:regulatory_compliance' %}" class="text-blue-500 hover:text-blue-600">Regulatory Compliance</a></li>
+                <li><a href="{% url 'requirements_gathering:documents' %}" class="text-blue-500 hover:text-blue-600">Requirements Documents</a></li>
+            </ul>
+        </div>
+
+        <!-- System Design Phase -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">System Design</h2>
+            <ul class="space-y-2">
+                <li><a href="{% url 'system_design:aws_components' %}" class="text-blue-500 hover:text-blue-600">AWS Architecture</a></li>
+                <li><a href="{% url 'system_design:api_endpoints' %}" class="text-blue-500 hover:text-blue-600">API Endpoints</a></li>
+                <li><a href="{% url 'system_design:ui_components' %}" class="text-blue-500 hover:text-blue-600">UI Components</a></li>
+                <li><a href="{% url 'system_design:integrations' %}" class="text-blue-500 hover:text-blue-600">System Integrations</a></li>
+                <li><a href="{% url 'system_design:diagrams' %}" class="text-blue-500 hover:text-blue-600">Architecture Diagrams</a></li>
+            </ul>
+        </div>
+    </div>
+
+    {% if not error %}
+    <!-- Recent Activity -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Project Activity -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4">Requirements Activity</h2>
+            <div class="space-y-4">
+                {% if customer_surveys %}
+                    {% for survey in customer_surveys %}
+                        <div class="border-b pb-4">
+                            <p class="font-semibold">New Survey Created: {{ survey.title }}</p>
+                            <p class="text-sm text-gray-500">{{ survey.created_date|date }}</p>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                {% if operational_requirements %}
+                    {% for req in operational_requirements %}
+                        <div class="border-b pb-4">
+                            <p class="font-semibold">New Requirement: {{ req.title }}</p>
+                            <p class="text-sm text-gray-500">{{ req.created_date|date }}</p>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                {% if not customer_surveys and not operational_requirements %}
+                    <p class="text-gray-500">No recent requirements activity</p>
+                {% endif %}
             </div>
-            <div class="card-body">
-                {% if recent_projects %}
-                    <div class="list-group">
-                        {% for project in recent_projects %}
-                            <a href="{% url 'admin:project_initiation_project_change' project.id %}" class="list-group-item list-group-item-action">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h6 class="mb-1">{{ project.name }}</h6>
-                                    <small>{{ project.created_at|date }}</small>
-                                </div>
-                                <p class="mb-1">{{ project.description|truncatewords:20 }}</p>
-                            </a>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="text-muted">No projects found.</p>
+        </div>
+
+        <!-- System Design Activity -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4">System Design Activity</h2>
+            <div class="space-y-4">
+                {% if aws_components %}
+                    {% for component in aws_components %}
+                        <div class="border-b pb-4">
+                            <p class="font-semibold">New AWS Component: {{ component.name }}</p>
+                            <p class="text-sm text-gray-500">{{ component.created_date|date }}</p>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                {% if api_endpoints %}
+                    {% for endpoint in api_endpoints %}
+                        <div class="border-b pb-4">
+                            <p class="font-semibold">New API Endpoint: {{ endpoint.path }}</p>
+                            <p class="text-sm text-gray-500">{{ endpoint.created_date|date }}</p>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                {% if ui_components %}
+                    {% for component in ui_components %}
+                        <div class="border-b pb-4">
+                            <p class="font-semibold">New UI Component: {{ component.name }}</p>
+                            <p class="text-sm text-gray-500">{{ component.created_date|date }}</p>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                {% if not aws_components and not api_endpoints and not ui_components %}
+                    <p class="text-gray-500">No recent system design activity</p>
                 {% endif %}
             </div>
         </div>
     </div>
 
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Upcoming Milestones</h5>
-            </div>
-            <div class="card-body">
-                {% if pending_milestones %}
-                    <div class="list-group">
-                        {% for milestone in pending_milestones %}
-                            <div class="list-group-item">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h6 class="mb-1">{{ milestone.name }}</h6>
-                                    <small class="text-{% if milestone.target_date|date:'Y-m-d' < now|date:'Y-m-d' %}danger{% else %}success{% endif %}">
-                                        {{ milestone.target_date|date }}
-                                    </small>
-                                </div>
-                                <p class="mb-1">{{ milestone.description|truncatewords:20 }}</p>
-                                <small>Project: {{ milestone.project.name }}</small>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="text-muted">No pending milestones.</p>
-                {% endif %}
-            </div>
+    <!-- Project Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+        <div class="bg-blue-500 text-white rounded-lg p-6">
+            <h3 class="text-lg font-semibold">AWS Components</h3>
+            <p class="text-3xl font-bold">{{ aws_components|length }}</p>
+        </div>
+        <div class="bg-green-500 text-white rounded-lg p-6">
+            <h3 class="text-lg font-semibold">API Endpoints</h3>
+            <p class="text-3xl font-bold">{{ api_endpoints|length }}</p>
+        </div>
+        <div class="bg-yellow-500 text-white rounded-lg p-6">
+            <h3 class="text-lg font-semibold">UI Components</h3>
+            <p class="text-3xl font-bold">{{ ui_components|length }}</p>
+        </div>
+        <div class="bg-purple-500 text-white rounded-lg p-6">
+            <h3 class="text-lg font-semibold">Integrations</h3>
+            <p class="text-3xl font-bold">{{ integrations|length }}</p>
         </div>
     </div>
-</div>
-
-<div class="row">
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Recent Feasibility Studies</h5>
-            </div>
-            <div class="card-body">
-                {% if recent_feasibility_studies %}
-                    <div class="list-group">
-                        {% for study in recent_feasibility_studies %}
-                            <a href="{% url 'admin:project_initiation_feasibilitystudy_change' study.id %}" class="list-group-item list-group-item-action">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h6 class="mb-1">{{ study.project.name }}</h6>
-                                    <small>{{ study.created_at|date }}</small>
-                                </div>
-                                <p class="mb-1">{{ study.conclusion|truncatewords:20 }}</p>
-                            </a>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="text-muted">No feasibility studies found.</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Pending Project Charters</h5>
-            </div>
-            <div class="card-body">
-                {% if pending_charters > 0 %}
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        There are {{ pending_charters }} project charters pending approval.
-                        <a href="{% url 'admin:project_initiation_projectcharter_changelist' %}" class="alert-link">Review now</a>
-                    </div>
-                {% else %}
-                    <p class="text-muted">No pending project charters.</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
+    {% endif %}
 </div>
 {% endblock %}
