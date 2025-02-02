@@ -19,6 +19,7 @@ services:
       - VIRTUAL_HOST=intake.justcodeit.ai
       - VIRTUAL_PORT=8000
       - LETSENCRYPT_HOST=intake.justcodeit.ai
+      - OPENROUTER_API_KEY=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
     networks:
       - nginx-proxy-manager_npm_network
       - default

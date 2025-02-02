@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'project_initiation',
     'requirements_gathering',
     'system_design',
+    'chatbot',
 ]
 
 MIDDLEWARE = [

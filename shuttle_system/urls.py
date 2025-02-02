@@ -23,4 +23,5 @@ urlpatterns = [
     path('', include('project_initiation.urls')),  # Include project_initiation URLs at root
     path('requirements/', include('requirements_gathering.urls')),
     path('system-design/', include('system_design.urls')),
+    path('chatbot/', include('chatbot.urls')),  # Add chatbot URLs
 ]
