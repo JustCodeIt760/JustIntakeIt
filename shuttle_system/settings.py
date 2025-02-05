@@ -26,19 +26,33 @@ SECRET_KEY = 'django-insecure-2=yawsw+t@$v%9xk#(@(admzrh%nfp0k-&k6@y@m_#t0d&)d90
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*', 'intake.jakemann.net', 'intake.justcodeit.ai']
+ALLOWED_HOSTS = ['intake.justcodeit.ai', 'shuttle.justcodeit.ai', 'www.shuttle.justcodeit.ai', 'localhost', '127.0.0.1']
+
+# Security Settings
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
 # CSRF Settings
 CSRF_TRUSTED_ORIGINS = [
     'https://intake.justcodeit.ai',
-    'https://intake.jakemann.net',
-    'http://intake.jakemann.net'
+    'https://shuttle.justcodeit.ai',
+    'https://www.shuttle.justcodeit.ai',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000'
 ]
 
+CSRF_COOKIE_DOMAIN = None  # Allow CSRF cookies to work across subdomains
+CSRF_USE_SESSIONS = True  # Store CSRF tokens in the session instead of cookies
+
+# CORS Settings
 CORS_ALLOWED_ORIGINS = [
     'https://intake.justcodeit.ai',
-    'https://intake.jakemann.net',
-    'http://intake.jakemann.net'
+    'https://shuttle.justcodeit.ai',
+    'https://www.shuttle.justcodeit.ai',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000'
 ]
 
 CORS_ALLOW_CREDENTIALS = True

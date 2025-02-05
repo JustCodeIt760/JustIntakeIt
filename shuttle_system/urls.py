@@ -17,10 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import RedirectView
+from project_initiation.views import landing_page
 
 urlpatterns = [
+    path('', landing_page, name='landing'),  # Root URL now shows landing page
     path('admin/', admin.site.urls),
-    path('', include('project_initiation.urls')),  # Include project_initiation URLs at root
+    path('dashboard/', include('project_initiation.urls')),  # Move project_initiation URLs under dashboard/
     path('requirements/', include('requirements_gathering.urls')),
     path('system-design/', include('system_design.urls')),
     path('chatbot/', include('chatbot.urls')),  # Add chatbot URLs

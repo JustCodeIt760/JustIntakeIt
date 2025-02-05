@@ -3,90 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Initiation - {% block title %}{% endblock %}</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     {% block extra_head %}{% endblock %}
     <style>
-        .wizard-btn {
-            background-color: #ffd700;
-            color: #000;
-            border-radius: 20px;
-            padding: 8px 20px;
-            margin-right: 15px;
-            transition: all 0.3s ease;
+        body {
+            background-color: #1a1f2c;
+            color: #ffffff;
+            padding-top: 1rem;
         }
-        .wizard-btn:hover {
-            background-color: #ffed4a;
-            color: #000;
-            transform: scale(1.05);
+
+        .container {
+            max-width: 1600px;
         }
-        .interview-btn {
-            background-color: #4CAF50;
-            color: white;
-            border-radius: 20px;
-            padding: 8px 20px;
-            margin-right: 15px;
-            transition: all 0.3s ease;
+
+        /* Auto-expanding input styles */
+        textarea.auto-expand {
+            min-height: 38px;
+            max-height: 500px;
+            resize: none;
+            overflow-y: hidden;
+            box-sizing: border-box;
+            line-height: 1.5;
         }
-        .interview-btn:hover {
-            background-color: #45a049;
-            color: white;
-            transform: scale(1.05);
+
+        input.auto-expand {
+            min-width: 200px;
+            width: auto;
+            box-sizing: border-box;
+        }
+
+        .input-group textarea.auto-expand {
+            width: 100%;
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'project_initiation:dashboard' %}">Project Initiation</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'project_initiation:dashboard' %}">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'admin:project_initiation_project_changelist' %}">Projects</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'admin:project_initiation_stakeholderanalysis_changelist' %}">Stakeholders</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'admin:project_initiation_risk_changelist' %}">Risks</a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav ms-auto">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link interview-btn" href="{% url 'requirements_gathering:quick_interview' %}">
-                                <i class="fas fa-comments"></i> Quick Interview
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link wizard-btn" href="{% url 'project_initiation:master_wizard' %}">
-                                <i class="fas fa-wand-magic-sparkles"></i> Wizard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'admin:index' %}">Admin</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'admin:logout' %}">Logout</a>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'admin:login' %}">Login</a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-    </nav>
-
     <div class="container">
         {% if messages %}
             {% for message in messages %}
@@ -102,6 +57,76 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Setup CSRF token for AJAX requests
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Add CSRF token to all AJAX requests
+        const csrftoken = getCookie('csrftoken');
+        if (csrftoken) {
+            document.addEventListener('DOMContentLoaded', function() {
+                const headers = new Headers({
+                    'X-CSRFToken': csrftoken,
+                });
+                // Add CSRF token to fetch requests
+                const originalFetch = window.fetch;
+                window.fetch = function() {
+                    const args = Array.from(arguments);
+                    if (args[1] && args[1].method && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(args[1].method.toUpperCase())) {
+                        if (!args[1].headers) args[1].headers = {};
+                        args[1].headers['X-CSRFToken'] = csrftoken;
+                    }
+                    return originalFetch.apply(window, args);
+                };
+            });
+        }
+
+        // Auto-expand functionality for textareas and inputs
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to auto-expand textarea
+            function autoExpandTextarea(element) {
+                element.style.height = 'auto';
+                element.style.height = (element.scrollHeight) + 'px';
+            }
+
+            // Add auto-expand class to all textareas and text inputs
+            document.querySelectorAll('textarea, input[type="text"]').forEach(function(element) {
+                element.classList.add('auto-expand');
+
+                if (element.tagName.toLowerCase() === 'textarea') {
+                    // Initial expansion
+                    autoExpandTextarea(element);
+
+                    // Add event listeners for dynamic expansion
+                    element.addEventListener('input', function() {
+                        autoExpandTextarea(this);
+                    });
+
+                    element.addEventListener('focus', function() {
+                        autoExpandTextarea(this);
+                    });
+                }
+            });
+
+            // Handle initial content
+            document.querySelectorAll('textarea.auto-expand').forEach(function(textarea) {
+                autoExpandTextarea(textarea);
+            });
+        });
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

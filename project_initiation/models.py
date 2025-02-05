@@ -187,3 +187,57 @@ class SWOTAnalysis(models.Model):
 
     def __str__(self):
         return f"SWOT Analysis - {self.project.title}"
+
+class Route(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+class Stop(models.Model):
+    name = models.CharField(max_length=100)
+    route = models.ForeignKey(Route, related_name='stops', on_delete=models.CASCADE)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    sequence_number = models.IntegerField()  # Order in the route
+    estimated_wait_time = models.IntegerField(default=0)  # in minutes
+    last_vehicle_timestamp = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['route', 'sequence_number']
+
+    def __str__(self):
+        return f"{self.name} (Route: {self.route.name})"
+
+class Vehicle(models.Model):
+    identifier = models.CharField(max_length=50, unique=True)
+    route = models.ForeignKey(Route, related_name='vehicles', on_delete=models.CASCADE)
+    current_latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    current_longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    last_updated = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+    heading = models.FloatField(default=0)  # Direction in degrees
+    speed = models.FloatField(default=0)  # Current speed in mph
+    next_stop = models.ForeignKey(Stop, null=True, blank=True, on_delete=models.SET_NULL)
+    estimated_arrival = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.identifier} on {self.route.name}"
+
+class TravelHistory(models.Model):
+    vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE)
+    stop = models.ForeignKey(Stop, on_delete=models.CASCADE)
+    arrival_time = models.DateTimeField()
+    departure_time = models.DateTimeField()
+    passengers_boarding = models.IntegerField(default=0)
+    passengers_alighting = models.IntegerField(default=0)
+
+    class Meta:
+        verbose_name_plural = "Travel histories"
+
+    def __str__(self):
+        return f"{self.vehicle.identifier} at {self.stop.name}"

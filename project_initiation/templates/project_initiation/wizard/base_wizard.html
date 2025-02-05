@@ -30,7 +30,10 @@
         const field = document.getElementById(fieldId);
         const generateBtn = document.querySelector(`[data-field-id="${fieldId}"]`);
 
-        if (!field) return;
+        if (!field) {
+            console.error('Field not found:', fieldId);
+            return;
+        }
 
         // Show loading state
         generateBtn.disabled = true;
@@ -39,16 +42,21 @@
         try {
             // Collect all form data for context
             const formData = {};
-            document.querySelectorAll('input, textarea').forEach(input => {
-                if (input.id && input.value) {
+            document.querySelectorAll('input, textarea, select').forEach(input => {
+                if (input.id && input.value && !input.id.startsWith('ai_')) {
                     formData[input.id] = input.value;
                 }
             });
+
+            // Get field type
+            const fieldType = field.tagName.toLowerCase();
+            const inputType = field.getAttribute('type') || fieldType;
 
             const response = await fetch('/chatbot/chat/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                 },
                 body: JSON.stringify({
                     message: `Generate content for the ${fieldLabel} field in the ${currentStep} step.`,
@@ -56,25 +64,45 @@
                         step: currentStep,
                         project: projectId,
                         field: fieldId,
+                        fieldLabel: fieldLabel,
+                        fieldType: inputType,
                         currentFormData: formData
                     }
                 })
             });
 
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to generate content');
+            }
+
             const data = await response.json();
 
-            if (response.ok) {
-                field.value = data.response;
-                field.style.backgroundColor = '#f0fff0';
-                setTimeout(() => {
-                    field.style.backgroundColor = '';
-                }, 1000);
+            // Update field value based on field type
+            if (fieldType === 'select') {
+                // For select fields, find the closest matching option
+                const options = Array.from(field.options);
+                const bestMatch = options.find(opt =>
+                    opt.text.toLowerCase().includes(data.response.toLowerCase())
+                ) || options[0];
+                field.value = bestMatch.value;
             } else {
-                throw new Error(data.error || 'Failed to generate content');
+                // For text inputs and textareas
+                field.value = data.response;
             }
+
+            // Visual feedback
+            field.style.backgroundColor = '#f0fff0';
+            setTimeout(() => {
+                field.style.backgroundColor = '';
+            }, 1000);
+
+            // Trigger change event
+            field.dispatchEvent(new Event('change', { bubbles: true }));
+
         } catch (error) {
             console.error('Error:', error);
-            alert('Failed to generate content. Please try again.');
+            alert(error.message || 'Failed to generate content. Please try again.');
         } finally {
             // Reset button state
             generateBtn.disabled = false;
@@ -217,7 +245,9 @@
                                               id="{{ field.id_for_label }}"
                                               rows="4">{{ field.value|default:'' }}</textarea>
                                 {% else %}
-                                    {{ field }}
+                                    <div class="form-control-container">
+                                        {{ field }}
+                                    </div>
                                 {% endif %}
                                 <button type="button"
                                         class="btn btn-outline-primary generate-btn"
@@ -523,6 +553,32 @@
     /* Animation for generated content */
     .form-control {
         transition: background-color 0.3s ease;
+    }
+
+    /* Form control container for select fields */
+    .form-control-container {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .form-control-container select {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem 0 0 0.375rem;
+        height: calc(3rem + 2px);
+    }
+
+    /* Ensure select fields work with input groups */
+    .input-group select.form-control {
+        border-top-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+    }
+
+    /* Error state for all field types */
+    .is-invalid,
+    .is-invalid select {
+        border-color: #dc3545;
     }
 </style>
 {% endblock %}

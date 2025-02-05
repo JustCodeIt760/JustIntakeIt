@@ -1,0 +1,1893 @@
+{% extends 'project_initiation/base.html' %}
+
+{% block title %}Shuttle Operations Dashboard{% endblock %}
+
+{% block content %}
+<!-- Main Dashboard Area -->
+<div class="dashboard-container">
+    <!-- Live Tracking Section -->
+    <div class="tracking-section">
+        <!-- Mobile Map View -->
+        <div class="analytics-panel map-view">
+            <h3><i class="fas fa-map-marked-alt"></i> Live Fleet Tracking</h3>
+            <div class="map-container">
+                <!-- Phone Design Elements -->
+                <div class="phone-notch">
+                    <div class="notch-camera"></div>
+                    <div class="notch-speaker"></div>
+                </div>
+                <div class="phone-button button-volume-up"></div>
+                <div class="phone-button button-volume-down"></div>
+                <div class="phone-button button-power"></div>
+
+                <!-- Map and Overlay -->
+                <div id="map"></div>
+            </div>
+        </div>
+
+
+    </div>
+
+    <!-- Stop QR Codes Section -->
+    <div class="stops-grid">
+        <h2 class="section-title"><i class="fas fa-qrcode"></i> Shuttle Stop Quick Access</h2>
+        <div class="qr-codes-container">
+            {% for stop in stops %}
+            <div class="stop-qr-card">
+                <div class="stop-info">
+                    <h3>{{ stop.name }}</h3>
+                    <span class="route-badge">{{ stop.route.name }}</span>
+                </div>
+                <div class="qr-code-wrapper">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ request.scheme }}://{{ request.get_host }}{% url 'project_initiation:stop_detail' stop.id %}"
+                         alt="QR Code for {{ stop.name }}"
+                         class="qr-code">
+                </div>
+                <div class="stop-meta">
+                    <span class="next-arrival">
+                        <i class="fas fa-clock"></i> Next: {{ stop.estimated_wait_time }} min
+                    </span>
+                    <a href="{% url 'project_initiation:stop_detail' stop.id %}" class="view-details">
+                        View Details <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+
+</div>
+
+
+
+<style>
+    /* Modern CSS Reset */
+    *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Custom Properties */
+    :root {
+        --primary-color: #4CAF50;
+        --secondary-color: #FFC107;
+        --dark-bg: #1a1a1a;
+        --light-text: #ffffff;
+        --shadow-color: rgba(0, 0, 0, 0.3);
+        --glass-bg: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Requirements Form Styles */
+    .requirements-form-panel {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 15px;
+        margin-bottom: 20px;
+        padding: 20px;
+    }
+
+    .requirements-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .requirements-header h2 {
+        font-size: 1.2rem;
+        color: var(--light-text);
+        margin: 0;
+    }
+
+    .anonymous-note {
+        color: var(--secondary-color);
+        font-size: 0.9rem;
+    }
+
+    .requirements-form {
+        width: 100%;
+    }
+
+    .requirement-section {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 20px;
+        border-radius: 10px;
+    }
+
+    .requirement-section h3 {
+        color: var(--primary-color);
+        font-size: 1rem;
+        margin-bottom: 15px;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        display: block;
+        color: var(--light-text);
+        margin-bottom: 5px;
+        font-size: 0.9rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--glass-border);
+        border-radius: 5px;
+        color: var(--light-text);
+        font-size: 0.9rem;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    }
+
+    .checkbox-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 10px;
+    }
+
+    .checkbox-group label {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+    }
+
+    .form-actions {
+        margin-top: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .submit-btn {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: background-color 0.3s ease;
+    }
+
+    .submit-btn:hover {
+        background: #45a049;
+    }
+
+    .privacy-note {
+        color: #888;
+        font-size: 0.8rem;
+    }
+
+    /* Existing Dashboard Styles */
+    .map-container {
+        width: 430px;
+        height: 932px;
+        margin: 2rem auto;
+        position: relative;
+        border-radius: 55px;
+        background: var(--dark-bg);
+        box-shadow:
+            0 0 0 10px rgba(255, 255, 255, 0.05),
+            0 20px 40px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        transform: perspective(1000px) rotateX(0deg);
+        transition: transform 0.3s ease;
+    }
+
+    /* iPhone-style Notch */
+    .phone-notch {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 160px;
+        height: 35px;
+        background: var(--dark-bg);
+        border-bottom-left-radius: 20px;
+        border-bottom-right-radius: 20px;
+        z-index: 1000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Notch Camera and Sensors */
+    .notch-camera {
+        width: 12px;
+        height: 12px;
+        background: #000;
+        border-radius: 50%;
+        border: 2px solid #2a2a2a;
+    }
+
+    .notch-speaker {
+        width: 40px;
+        height: 4px;
+        background: #2a2a2a;
+        border-radius: 2px;
+    }
+
+    /* Phone Buttons */
+    .phone-button {
+        position: absolute;
+        background: var(--dark-bg);
+        border-radius: 3px;
+    }
+
+    .button-volume-up {
+        left: -2px;
+        top: 120px;
+        width: 4px;
+        height: 40px;
+    }
+
+    .button-volume-down {
+        left: -2px;
+        top: 180px;
+        width: 4px;
+        height: 40px;
+    }
+
+    .button-power {
+        right: -2px;
+        top: 150px;
+        width: 4px;
+        height: 80px;
+    }
+
+    /* Map Styles */
+    #map {
+        width: 100%;
+        height: 100%;
+        border-radius: 45px;
+        mask-image: linear-gradient(to bottom,
+            transparent 0px,
+            black 35px,
+            black calc(100% - 35px),
+            transparent 100%
+        );
+        -webkit-mask-image: linear-gradient(to bottom,
+            transparent 0px,
+            black 35px,
+            black calc(100% - 35px),
+            transparent 100%
+        );
+    }
+
+    /* Custom Markers */
+    .custom-marker {
+        width: 40px;
+        height: 40px;
+        background: var(--glass-bg);
+        border: 3px solid var(--glass-border);
+        border-radius: 50%;
+        box-shadow: 0 4px 12px var(--shadow-color);
+        color: var(--light-text);
+        font-weight: bold;
+        font-size: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        user-select: none;
+        transition: transform 0.3s ease;
+    }
+
+    .custom-marker:hover {
+        transform: scale(1.1);
+    }
+
+    /* Shuttle Marker with Glow Effect */
+    .shuttle-marker {
+        width: 40px;
+        height: 40px;
+        background: var(--primary-color);
+        clip-path: polygon(50% 0%, 100% 100%, 50% 85%, 0% 100%);
+        border: 3px solid var(--light-text);
+        box-shadow:
+            0 4px 12px var(--shadow-color),
+            0 0 20px var(--primary-color);
+        transition: all 0.3s ease;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { box-shadow: 0 4px 12px var(--shadow-color), 0 0 20px var(--primary-color); }
+        50% { box-shadow: 0 4px 12px var(--shadow-color), 0 0 40px var(--primary-color); }
+        100% { box-shadow: 0 4px 12px var(--shadow-color), 0 0 20px var(--primary-color); }
+    }
+
+    /* Map Overlay */
+    .map-overlay {
+        position: absolute;
+        top: 35px;
+        left: 0;
+        right: 0;
+        padding: 20px;
+        background: linear-gradient(to bottom,
+            rgba(0, 0, 0, 0.8) 0%,
+            rgba(0, 0, 0, 0.4) 50%,
+            transparent 100%
+        );
+        color: var(--light-text);
+        z-index: 100;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .map-container {
+            width: 100%;
+            max-width: 430px;
+            height: 80vh;
+            max-height: 932px;
+            margin: 1rem auto;
+            transform: none;
+        }
+    }
+
+    /* Loading Animation */
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--dark-bg);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        opacity: 1;
+        transition: opacity 0.5s ease;
+    }
+
+    .loading-overlay.hidden {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid var(--glass-border);
+        border-top-color: var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    .error-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+    }
+
+    .error-message {
+        background: #2d3548;
+        padding: 2rem;
+        border-radius: 12px;
+        text-align: center;
+        max-width: 80%;
+    }
+
+    .error-message h3 {
+        color: #F44336;
+        margin-bottom: 1rem;
+    }
+
+    .error-message p {
+        color: #ffffff;
+        margin-bottom: 1.5rem;
+    }
+
+    .retry-button {
+        background: #4CAF50;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .retry-button:hover {
+        background: #45a049;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        background: #1a1f2c;
+        color: #ffffff;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .dashboard-container {
+        min-height: 100vh;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        padding: 1rem;
+        background: #242b3d;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: #2d3548;
+        border-radius: 8px;
+        transition: transform 0.3s ease;
+    }
+
+    .stat-item:hover {
+        transform: translateY(-2px);
+    }
+
+    .stat-item i {
+        font-size: 2rem;
+        color: #4CAF50;
+    }
+
+    .stat-details {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #ffffff;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #a0aec0;
+    }
+
+    /* Dashboard Grid */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .wait-times-panel {
+        background: #242b3d;
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+
+    .terminal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .last-updated {
+        font-size: 0.875rem;
+        color: #a0aec0;
+    }
+
+    .wait-time-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+
+    .wait-time-item {
+        background: #2d3548;
+        padding: 1.25rem;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        transition: transform 0.2s ease;
+    }
+
+    .wait-time-item:hover {
+        transform: translateY(-2px);
+    }
+
+    .terminal-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .status-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-left: 0.5rem;
+    }
+
+    .status-indicator.active {
+        background: #4CAF50;
+        box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+    }
+
+    .status-indicator.warning {
+        background: #FFC107;
+        box-shadow: 0 0 8px rgba(255, 193, 7, 0.4);
+    }
+
+    .time-info {
+        text-align: center;
+    }
+
+    .time-info .time {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #ffffff;
+    }
+
+    .time-info .unit {
+        font-size: 0.875rem;
+        color: #a0aec0;
+    }
+
+    .trend {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .trend.decreasing {
+        color: #4CAF50;
+    }
+
+    .trend.increasing {
+        color: #F44336;
+    }
+
+    .trend.stable {
+        color: #FFC107;
+    }
+
+    /* Metrics Panel */
+    .metrics-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .metric-card {
+        background: #242b3d;
+        border-radius: 12px;
+        padding: 1rem;
+    }
+
+    .occupancy-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding: 0.5rem;
+    }
+
+    .occupancy-item {
+        background: #2d3548;
+        padding: 1rem;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .occupancy-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .terminal-label {
+        font-weight: 500;
+        font-size: 1rem;
+    }
+
+    .passenger-count {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+    }
+
+    .passenger-count .count {
+        font-size: 1.25rem;
+        font-weight: bold;
+        color: #4CAF50;
+    }
+
+    .passenger-count .label {
+        font-size: 0.75rem;
+        color: #a0aec0;
+    }
+
+    .capacity-bar {
+        height: 8px;
+        background: #1a1f2c;
+        border-radius: 4px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .capacity-bar .bar-fill {
+        height: 100%;
+        background: #4CAF50;
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+
+    .capacity-bar .bar-fill.warning {
+        background: #FFC107;
+    }
+
+    .capacity-text {
+        font-size: 0.75rem;
+        color: #a0aec0;
+        margin-top: 0.25rem;
+        display: block;
+    }
+
+    /* Wait Times */
+    .wait-time-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .wait-time-item {
+        background: #2d3548;
+        padding: 1rem;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .wait-time-item.low { border-left: 4px solid #4CAF50; }
+    .wait-time-item.medium { border-left: 4px solid #FFC107; }
+    .wait-time-item.high { border-left: 4px solid #F44336; }
+
+    /* Shuttles Panel */
+    .shuttles-panel {
+        background: #242b3d;
+        border-radius: 12px;
+        padding: 1rem;
+    }
+
+    .shuttle-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .shuttle-item {
+        background: #2d3548;
+        padding: 1rem;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .shuttle-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .shuttle-status.online {
+        color: #4CAF50;
+    }
+
+    .shuttle-route {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        color: #a0aec0;
+    }
+
+    .shuttle-metrics {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.875rem;
+        color: #a0aec0;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stats-bar {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .wait-time-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .driver-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .driver-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: #2d3548;
+        padding: 0.75rem;
+        border-radius: 8px;
+        transition: transform 0.2s ease;
+    }
+
+    .driver-item:hover {
+        transform: translateX(4px);
+    }
+
+    .driver-avatar {
+        width: 40px;
+        height: 40px;
+        background: #4CAF50;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+    }
+
+    .driver-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .driver-name {
+        font-weight: 500;
+    }
+
+    .driver-status {
+        font-size: 0.875rem;
+    }
+
+    .driver-status.online {
+        color: #4CAF50;
+    }
+
+    .driver-status.break {
+        color: #FFC107;
+    }
+
+    .driver-stats {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.25rem;
+        font-size: 0.875rem;
+        color: #a0aec0;
+    }
+
+    .route-analytics-panel {
+        background: #242b3d;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .decision-factors, .route-optimization, .time-window {
+        background: #2d3548;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+
+    .factor-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .factor-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .factor-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .factor-weight {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+    }
+
+    .factor-weight.high {
+        background: rgba(76, 175, 80, 0.2);
+        color: #4CAF50;
+    }
+
+    .factor-weight.medium {
+        background: rgba(255, 193, 7, 0.2);
+        color: #FFC107;
+    }
+
+    .factor-bar {
+        height: 8px;
+        background: #1a1f2c;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .factor-value {
+        height: 100%;
+        background: linear-gradient(to right, #4CAF50, #81C784);
+        transition: width 0.3s ease;
+    }
+
+    .route-sequence {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+    }
+
+    .terminal-tag {
+        background: #1a1f2c;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 500;
+    }
+
+    .optimization-details {
+        margin-top: 1rem;
+    }
+
+    .optimization-metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .metric {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .metric .value {
+        font-size: 1.125rem;
+        font-weight: 500;
+        color: #4CAF50;
+    }
+
+    .time-slots {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .time-slot {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.75rem;
+        border-radius: 6px;
+        background: #1a1f2c;
+    }
+
+    .time-slot.optimal {
+        border: 2px solid #4CAF50;
+    }
+
+    .time-slot.suboptimal {
+        border: 2px solid #FFC107;
+    }
+
+    .time-slot.poor {
+        border: 2px solid #F44336;
+    }
+
+    .time-slot .time {
+        font-weight: 500;
+    }
+
+    .time-slot .score {
+        font-size: 0.75rem;
+        color: #a0aec0;
+    }
+
+    /* Financial Analytics */
+    .analytics-panel {
+        background: #242b3d;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .analytics-panel h3 {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+
+    .metric-box {
+        background: #2d3548;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .metric-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .trend {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+    }
+
+    .trend.positive {
+        background: rgba(76, 175, 80, 0.2);
+        color: #4CAF50;
+    }
+
+    .trend.negative {
+        background: rgba(244, 67, 54, 0.2);
+        color: #F44336;
+    }
+
+    .trend.stable {
+        background: rgba(255, 193, 7, 0.2);
+        color: #FFC107;
+    }
+
+    .metric-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #ffffff;
+        margin: 0.5rem 0;
+    }
+
+    .metric-subtext {
+        font-size: 0.875rem;
+        color: #a0aec0;
+    }
+
+    /* Resource Utilization */
+    .utilization-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .utilization-item {
+        background: #2d3548;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .util-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .util-percentage {
+        font-weight: bold;
+        color: #4CAF50;
+    }
+
+    .util-bar {
+        height: 8px;
+        background: #1a1f2c;
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 0.5rem 0;
+    }
+
+    .util-fill {
+        height: 100%;
+        background: #4CAF50;
+        transition: width 0.3s ease;
+    }
+
+    .util-details {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.875rem;
+        color: #a0aec0;
+    }
+
+    .util-status {
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+    }
+
+    .util-status.optimal {
+        background: rgba(76, 175, 80, 0.2);
+        color: #4CAF50;
+    }
+
+    /* Customer Satisfaction */
+    .satisfaction-metrics {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 2rem;
+        background: #2d3548;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .satisfaction-score {
+        display: flex;
+        gap: 1.5rem;
+    }
+
+    .score-circle {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: #4CAF50;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .score {
+        font-size: 2rem;
+        font-weight: bold;
+        color: white;
+    }
+
+    .score-label {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .rating-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .bar {
+        flex: 1;
+        height: 8px;
+        background: #1a1f2c;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .bar div {
+        height: 100%;
+        background: #4CAF50;
+        transition: width 0.3s ease;
+    }
+
+    /* Maintenance Status */
+    .maintenance-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .maintenance-status {
+        background: #2d3548;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .status-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .health-score {
+        font-size: 1.25rem;
+        font-weight: bold;
+    }
+
+    .health-score.good {
+        color: #4CAF50;
+    }
+
+    .vehicle-status {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+
+    .status-item {
+        text-align: center;
+    }
+
+    .status {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+    }
+
+    .status.operational { color: #4CAF50; }
+    .status.maintenance { color: #FFC107; }
+    .status.repair { color: #F44336; }
+
+    /* Operational Efficiency */
+    .efficiency-metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .efficiency-item {
+        background: #2d3548;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .efficiency-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .efficiency-trend {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+    }
+
+    .efficiency-trend.positive {
+        background: rgba(76, 175, 80, 0.2);
+        color: #4CAF50;
+    }
+
+    .efficiency-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #ffffff;
+        margin: 0.5rem 0;
+    }
+
+    .efficiency-target {
+        font-size: 0.875rem;
+        color: #a0aec0;
+    }
+
+    /* Peak Hours Analysis */
+    .peak-hours-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .peak-chart {
+        background: #2d3548;
+        padding: 1rem;
+        border-radius: 8px;
+        height: 200px;
+    }
+
+    .peak-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .peak-stat-item {
+        background: #2d3548;
+        padding: 1rem;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Terminal Traffic */
+    .terminal-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .terminal-item {
+        background: #2d3548;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .traffic-status {
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+    }
+
+    .traffic-status.high { background: rgba(244, 67, 54, 0.2); color: #F44336; }
+    .traffic-status.medium { background: rgba(255, 193, 7, 0.2); color: #FFC107; }
+    .traffic-status.low { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
+
+    /* Weather Impact */
+    .weather-grid {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 2rem;
+        background: #2d3548;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .current-weather {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .weather-icon i {
+        font-size: 3rem;
+        color: #FFC107;
+    }
+
+    /* Dashboard Layout */
+    .dashboard-container {
+        padding: 20px;
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    .metrics-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 30px;
+        margin-top: 30px;
+    }
+
+    /* Metric Cards */
+    .metric-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 15px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    .metric-icon {
+        width: 60px;
+        height: 60px;
+        background: rgba(76, 175, 80, 0.1);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 20px;
+    }
+
+    .metric-icon i {
+        font-size: 24px;
+        color: var(--primary-color);
+    }
+
+    .metric-content h3 {
+        font-size: 14px;
+        color: #888;
+        margin: 0;
+    }
+
+    .metric-value {
+        font-size: 24px;
+        font-weight: bold;
+        margin: 5px 0;
+        color: var(--light-text);
+    }
+
+    .metric-trend {
+        font-size: 12px;
+        margin: 0;
+    }
+
+    .metric-trend.positive {
+        color: var(--primary-color);
+    }
+
+    .metric-trend.negative {
+        color: #dc3545;
+    }
+
+    /* Analytics Panels */
+    .analytics-panel {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    .analytics-panel h3 {
+        color: var(--light-text);
+        margin-bottom: 20px;
+        font-size: 18px;
+    }
+
+    .analytics-panel h3 i {
+        margin-right: 10px;
+        color: var(--primary-color);
+    }
+
+    /* Route Performance Styles */
+    .route-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .route-item {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        padding: 15px;
+    }
+
+    .route-info {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .route-name {
+        font-weight: bold;
+        color: var(--light-text);
+    }
+
+    .route-stats {
+        display: flex;
+        gap: 15px;
+        color: #888;
+        font-size: 14px;
+    }
+
+    .route-stats i {
+        margin-right: 5px;
+    }
+
+    .progress {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        transition: width 0.3s ease;
+    }
+
+    /* Chart Container */
+    .chart-container {
+        width: 100%;
+        height: 300px;
+        position: relative;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .metrics-row {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .metric-card {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .metric-icon {
+            margin: 0 0 15px 0;
+        }
+    }
+
+    /* Stop QR Codes Section Styles */
+    .stops-grid {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 2rem;
+        margin: 2rem 0;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .section-title {
+        color: #ffffff;
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .qr-codes-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .stop-qr-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        transition: transform 0.2s ease;
+    }
+
+    .stop-qr-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stop-info {
+        text-align: center;
+    }
+
+    .stop-info h3 {
+        color: #ffffff;
+        margin: 0;
+        font-size: 1.2rem;
+    }
+
+    .route-badge {
+        display: inline-block;
+        background: #4CAF50;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+    }
+
+    .qr-code-wrapper {
+        display: flex;
+        justify-content: center;
+        padding: 1rem;
+    }
+
+    .qr-code {
+        background: white;
+        padding: 0.5rem;
+        border-radius: 8px;
+        width: 150px;
+        height: 150px;
+    }
+
+    .stop-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #888;
+        font-size: 0.9rem;
+    }
+
+    .next-arrival {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .view-details {
+        color: #4CAF50;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: color 0.2s ease;
+    }
+
+    .view-details:hover {
+        color: #45a049;
+    }
+
+    @media (max-width: 768px) {
+        .qr-codes-container {
+            grid-template-columns: 1fr;
+        }
+
+        .stop-qr-card {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+    }
+</style>
+
+<!-- Replace the Google Maps script with proper async loading -->
+<script>
+    // Add interpolatePosition function
+    function interpolatePosition(path, fraction) {
+        if (fraction <= 0) return path[0];
+        if (fraction >= 1) return path[path.length - 1];
+
+        const pathLength = path.length - 1;
+        const index = Math.floor(fraction * pathLength);
+        const remainder = fraction * pathLength - index;
+
+        const p1 = path[index];
+        const p2 = path[index + 1];
+
+        return {
+            lat: p1.lat + remainder * (p2.lat - p1.lat),
+            lng: p1.lng + remainder * (p2.lng - p1.lng)
+        };
+    }
+
+    // Add calculateBearing function
+    function calculateBearing(start, end) {
+        const toRad = (deg) => deg * Math.PI / 180;
+        const toDeg = (rad) => rad * 180 / Math.PI;
+
+        const startLat = toRad(start.lat);
+        const startLng = toRad(start.lng);
+        const endLat = toRad(end.lat);
+        const endLng = toRad(end.lng);
+
+        const dLng = endLng - startLng;
+
+        const y = Math.sin(dLng) * Math.cos(endLat);
+        const x = Math.cos(startLat) * Math.sin(endLat) -
+                Math.sin(startLat) * Math.cos(endLat) * Math.cos(dLng);
+
+        let bearing = toDeg(Math.atan2(y, x));
+        return (bearing + 360) % 360;
+    }
+
+    async function initMap() {
+        try {
+            // Show loading overlay
+            const loadingOverlay = document.createElement('div');
+            loadingOverlay.className = 'loading-overlay';
+            loadingOverlay.innerHTML = '<div class="loading-spinner"></div>';
+            document.querySelector('.map-container').appendChild(loadingOverlay);
+
+            // Load the required libraries
+            const { Map } = await google.maps.importLibrary("maps");
+            const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+
+            // Hide loading overlay
+            loadingOverlay.classList.add('hidden');
+            setTimeout(() => loadingOverlay.remove(), 500);
+
+            // Initialize map with a valid Map ID
+            const map = new Map(document.getElementById('map'), {
+                zoom: 13,
+                center: { lat: 33.6400, lng: -84.4200 },
+                mapId: 'DEMO_MAP_ID',
+                mapTypeId: 'roadmap',
+                disableDefaultUI: true,
+                zoomControl: true
+            });
+
+            // Define locations with exact coordinates
+            const locations = {
+                airport: {
+                    position: { lat: 33.6367, lng: -84.4281 },
+                    title: 'Hartsfield-Jackson Atlanta International Airport'
+                },
+                parkingLot: {
+                    position: { lat: 33.6786, lng: -84.4244 },
+                    title: 'Peachy Airport Parking'
+                },
+                stops: [
+                    {
+                        position: { lat: 33.6786, lng: -84.4244 },
+                        title: 'Stop A - Main Terminal',
+                        nextArrival: '5 min',
+                        waiting: 15
+                    },
+                    {
+                        position: { lat: 33.6700, lng: -84.4210 },
+                        title: 'Stop B - North Parking',
+                        nextArrival: '8 min',
+                        waiting: 7
+                    },
+                    {
+                        position: { lat: 33.6400, lng: -84.4220 },
+                        title: 'Stop C - South Terminal',
+                        nextArrival: '12 min',
+                        waiting: 20
+                    }
+                ]
+            };
+
+            // Create stop markers with info windows
+            locations.stops.forEach(stop => {
+                const marker = new AdvancedMarkerElement({
+                    map,
+                    position: stop.position,
+                    title: stop.title,
+                    content: createStopMarker(stop)
+                });
+
+                // Create info window for stop
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `
+                        <div style="color: black; padding: 10px;">
+                            <h3>${stop.title}</h3>
+                            <p><i class="fas fa-clock"></i> Next arrival: ${stop.nextArrival}</p>
+                            <p><i class="fas fa-users"></i> Waiting: ${stop.waiting} people</p>
+                        </div>
+                    `
+                });
+
+                // Add click listener
+                marker.addListener('click', () => {
+                    infoWindow.open(map, marker);
+                });
+            });
+
+            // Function to create stop marker element
+            function createStopMarker(stop) {
+                const markerElement = document.createElement('div');
+                markerElement.className = 'custom-marker stop-marker';
+                markerElement.innerHTML = '<i class="fas fa-bus-simple"></i>';
+                markerElement.style.backgroundColor = '#FFC107';
+                markerElement.style.color = '#000';
+                markerElement.style.padding = '8px';
+                markerElement.style.borderRadius = '50%';
+                markerElement.style.border = '2px solid #fff';
+                markerElement.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+                return markerElement;
+            }
+
+            // Add CSS for stop markers
+            const style = document.createElement('style');
+            style.textContent = `
+                .stop-marker {
+                    cursor: pointer;
+                    transition: transform 0.2s ease;
+                }
+                .stop-marker:hover {
+                    transform: scale(1.1);
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Create shuttle marker element
+            function createShuttleMarker() {
+                const markerElement = document.createElement('div');
+                markerElement.className = 'shuttle-marker';
+                markerElement.style.width = '40px';
+                markerElement.style.height = '40px';
+                markerElement.style.backgroundColor = '#4CAF50';
+                markerElement.style.clipPath = 'polygon(50% 0%, 100% 100%, 50% 85%, 0% 100%)';
+                markerElement.style.border = '3px solid white';
+                markerElement.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+                markerElement.style.transition = 'transform 0.3s ease';
+                return markerElement;
+            }
+
+            // Create shuttle markers with improved visibility
+            const shuttleMarkers = locations.stops.map(stop => {
+                return new AdvancedMarkerElement({
+                    map,
+                    position: stop.position,
+                    content: createShuttleMarker(),
+                    collisionBehavior: 'OPTIONAL_AND_HIDES_LOWER_PRIORITY',
+                    zIndex: 1000
+                });
+            });
+
+            // Update shuttle positions
+            setInterval(() => {
+                locations.stops.forEach((stop, index) => {
+                    // Calculate next position
+                    const newPos = interpolatePosition(locations.stops, index / (locations.stops.length - 1));
+
+                    // Calculate bearing for rotation
+                    const nextPosition = index / (locations.stops.length - 1) + 0.01;
+                    const nextPos = interpolatePosition(locations.stops, nextPosition);
+                    const bearing = calculateBearing(stop.position, nextPos);
+
+                    // Update marker position and rotation
+                    const markerElement = shuttleMarkers[index].content;
+                    markerElement.style.transform = `rotate(${bearing}deg)`;
+                    shuttleMarkers[index].position = newPos;
+                });
+            }, 50); // Decreased interval for smoother animation
+
+            // Add info windows
+            const airportInfo = new google.maps.InfoWindow({
+                content: '<div style="color: black; padding: 5px;">' +
+                        '<h3>Hartsfield-Jackson Atlanta International Airport</h3>' +
+                        '<p>Main Terminal</p>' +
+                        '</div>'
+            });
+
+            const parkingInfo = new google.maps.InfoWindow({
+                content: '<div style="color: black; padding: 5px;">' +
+                        '<h3>Peachy Airport Parking</h3>' +
+                        '<p>3100 Sylvan Rd, Atlanta, GA 30354</p>' +
+                        '<p>Available Spaces: ' + Math.floor(Math.random() * 50 + 50) + '</p>' +
+                        '</div>'
+            });
+
+        } catch (error) {
+            console.error('Error loading Google Maps:', error);
+
+            // Show error overlay
+            const errorOverlay = document.createElement('div');
+            errorOverlay.className = 'error-overlay';
+            errorOverlay.innerHTML = `
+                <div class="error-message">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Map Loading Error</h3>
+                    <p>There was an error loading the map. This might be due to an invalid API key or network issues.</p>
+                    <button class="retry-button" onclick="window.location.reload()">
+                        <i class="fas fa-sync"></i> Retry
+                    </button>
+                </div>
+            `;
+            document.querySelector('.map-container').appendChild(errorOverlay);
+        }
+    }
+
+    // Load Google Maps API with proper async loading
+    (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
+    ({key: "{{ google_maps_api_key }}", v: "weekly"});
+</script>
+<script>
+    // Add updateStopInfo function
+    function updateStopInfo() {
+        // In a real implementation, this would fetch from your backend
+        const stops = document.querySelectorAll('.route-item');
+
+        stops.forEach(stop => {
+            const waitTimeSpan = stop.querySelector('.route-stats span:first-child');
+            const waitingSpan = stop.querySelector('.route-stats span:last-child');
+
+            // Simulate real-time updates
+            const minutes = Math.floor(Math.random() * 15) + 1;
+            const waiting = Math.floor(Math.random() * 25) + 1;
+
+            waitTimeSpan.innerHTML = `<i class="fas fa-clock"></i> Next: ${minutes} min`;
+            waitingSpan.innerHTML = `<i class="fas fa-users"></i> ${waiting} waiting`;
+        });
+    }
+
+    // Initialize everything when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Google Maps
+        initMap();
+
+        // Start stop information updates
+        setInterval(updateStopInfo, 30000); // Update every 30 seconds
+        updateStopInfo();
+    });
+</script>
+<script>
+    // Add form handling
+    function handleSubmit(event) {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const data = Object.fromEntries(formData.entries());
+
+        // Here you would typically send the data to your server
+        console.log('Submitted requirements:', data);
+
+        // Show success message
+        const successMessage = document.createElement('div');
+        successMessage.className = 'alert alert-success';
+        successMessage.innerHTML = `
+            <i class="fas fa-check-circle"></i>
+            Requirements submitted successfully! Thank you for your contribution.
+        `;
+        event.target.prepend(successMessage);
+
+        // Clear form after 2 seconds
+        setTimeout(() => {
+            event.target.reset();
+            successMessage.remove();
+        }, 2000);
+    }
+</script>
+{% endblock content %}

@@ -6,3 +6,4 @@ app_name = 'chatbot'
 urlpatterns = [
     path('chat/', views.chat, name='chat'),
 ]
+

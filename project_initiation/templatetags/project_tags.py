@@ -9,3 +9,8 @@ def multiply(value, arg):
         return float(value) * float(arg)
     except (ValueError, TypeError):
         return ''
+
+@register.filter
+def get_item(dictionary, key):
+    """Gets an item from a dictionary using bracket notation"""
+    return dictionary.get(key, '')

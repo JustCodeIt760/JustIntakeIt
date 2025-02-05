@@ -27,6 +27,10 @@ def chat(request):
                 logger.error('OpenRouter API key not found')
                 return JsonResponse({'error': 'API configuration error'}, status=500)
 
+            # Debug log for API key (mask most of it)
+            masked_key = f"{api_key[:8]}...{api_key[-4:]}" if len(api_key) > 12 else "***"
+            logger.debug(f"Using API key: {masked_key}")
+
             # Build system message based on context
             system_message = "You are an AI assistant helping with a project management wizard."
 
@@ -52,17 +56,28 @@ def chat(request):
 
             # Add field-specific context for generation
             if context.get('field'):
-                system_message += f"\n\nPlease generate appropriate content for the '{context.get('field')}' field."
+                field_type = context.get('fieldType', 'text')
+                field_label = context.get('fieldLabel', context['field'])
+
+                system_message += f"\n\nPlease generate appropriate content for the '{field_label}' field."
+                system_message += f"\nField type: {field_type}"
+
                 if context.get('currentFormData'):
-                    system_message += " Use the existing form data as context to ensure the generated content is relevant and consistent."
-                system_message += "\nProvide ONLY the content for the field, without any explanations or additional text."
+                    system_message += "\nUse the existing form data as context to ensure the generated content is relevant and consistent."
+
+                # Add specific instructions based on field type
+                if field_type == 'select':
+                    system_message += "\nProvide a concise, single-option response that would be found in a dropdown menu."
+                else:
+                    system_message += "\nProvide ONLY the content for the field, without any explanations or additional text."
+                    if field_type == 'text':
+                        system_message += "\nKeep the response concise and appropriate for a single-line text input."
 
             # OpenRouter API call
             headers = {
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
                 "HTTP-Referer": "https://intake.justcodeit.ai",
-                "X-Title": "JustIntakeIt Chatbot"
+                "X-Title": "JustIntakeIt Chatbot",
+                "Authorization": f"Bearer {api_key}"
             }
 
             payload = {
@@ -81,10 +96,45 @@ def chat(request):
                     timeout=30
                 )
 
-                response.raise_for_status()
+                # Log response status and headers
+                logger.debug(f"API Response Status: {response.status_code}")
+                logger.debug(f"API Response Headers: {dict(response.headers)}")
 
+                if not response.ok:
+                    error_content = response.text
+                    logger.error(f"API Error Response: {error_content}")
+                    if response.status_code == 401:
+                        return JsonResponse({
+                            'error': 'Authentication failed. Please check API key configuration.'
+                        }, status=401)
+                    elif response.status_code == 429:
+                        return JsonResponse({
+                            'error': 'Rate limit exceeded. Please try again later.'
+                        }, status=429)
+                    else:
+                        return JsonResponse({
+                            'error': f'API error: {error_content}'
+                        }, status=response.status_code)
+
+                response.raise_for_status()
                 response_data = response.json()
-                bot_response = response_data['choices'][0]['message']['content']
+
+                # Log successful response
+                logger.debug("API call successful")
+
+                bot_response = response_data['choices'][0]['message']['content'].strip()
+
+                # Clean up the response for field generation
+                if context.get('field'):
+                    # Remove any markdown formatting
+                    bot_response = bot_response.replace('`', '').replace('*', '')
+                    # Remove any explanatory text
+                    if ':' in bot_response:
+                        bot_response = bot_response.split(':')[-1].strip()
+                    # Ensure single line for text inputs
+                    if context.get('fieldType') == 'text':
+                        bot_response = bot_response.split('\n')[0].strip()
+
                 return JsonResponse({'response': bot_response})
 
             except requests.exceptions.RequestException as e:
